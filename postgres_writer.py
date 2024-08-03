@@ -8,8 +8,8 @@ from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, 
 db_config = {
     'PASS': environ.get('PASS', ''),
     'DOMAIN': environ.get('DOMAIN', ''),
-    'HASH_SIZE': environ.get('HASH_SIZE', ''),
-    'RECORDS': environ.get('RECORDS', ''),
+    'HASH_SIZE': int(environ.get('HASH_SIZE', '')),
+    'RECORDS': int(environ.get('RECORDS', '')),
 }
 metadata = MetaData()
 
@@ -60,3 +60,6 @@ def postgres_write_hash(size: int = 100) -> bool:
         connection.close()
         return True
     return False
+
+if __name__ == '__main__':
+    postgres_write_hash(db_config['RECORDS'])
