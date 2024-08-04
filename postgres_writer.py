@@ -3,6 +3,8 @@ from os import environ
 from datetime import datetime
 import psycopg2
 
+logging.basicConfig(level=logging.INFO)
+
 db_config = {
     'PASS': environ.get('PASS', ''),
     'DOMAIN': environ.get('DOMAIN', ''),
