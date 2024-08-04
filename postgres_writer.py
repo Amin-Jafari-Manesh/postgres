@@ -2,7 +2,6 @@ import logging
 from os import environ
 from datetime import datetime
 import psycopg2
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime
 
 db_config = {
     'PASS': environ.get('PASS', ''),
@@ -10,15 +9,6 @@ db_config = {
     'HASH_SIZE': int(environ.get('HASH_SIZE', '')),
     'RECORDS': int(environ.get('RECORDS', '')),
 }
-metadata = MetaData()
-
-# create table for maximum 1000 hash size
-hashes = Table(
-    'hashes', metadata,
-    Column('id', Integer, primary_key=True),
-    Column('hash', String(64 * db_config['HASH_SIZE'])),
-    Column('created_at', DateTime, default=datetime.now)
-)
 
 
 def generate_random_hash(numb: int = 1) -> str:
@@ -44,6 +34,8 @@ def test_postgres_connection():
             port='5432'
         )
         logging.info("PostgreSQL connection successful")
+        cur = conn.cursor()
+        cur.execute("CREATE TABLE hashes (id serial PRIMARY KEY, hash TEXT, created_at TIMESTAMP);")
         conn.close()
         return True
     except Exception as e:
@@ -53,15 +45,26 @@ def test_postgres_connection():
 
 def postgres_write_hash(size: int = 100) -> bool:
     if test_postgres_connection():
-        postgres_uri = f"postgresql+psycopg2://postgres:{db_config['PASS']}@{db_config['DOMAIN']}:5432/db"
-        engine = create_engine(postgres_uri)
-        connection = engine.connect()
-        metadata.create_all(engine)
-        for _ in range(size):
-            connection.execute(hashes.insert().values(hash=generate_random_hash(db_config['HASH_SIZE'])))
-        connection.close()
-        return True
-    return False
+        try:
+            conn = psycopg2.connect(
+                dbname='db',
+                user='postgres',
+                password=db_config['PASS'],
+                host=db_config['DOMAIN'],
+                port='5432'
+            )
+            cur = conn.cursor()
+            for _ in range(size):
+                cur.execute(
+                    f"INSERT INTO hashes (hash, created_at) VALUES ('{generate_random_hash(db_config['HASH_SIZE'])}', '{datetime.now()}');")
+            conn.commit()
+            conn.close()
+            return True
+        except Exception as e:
+            logging.error(f"Failed to write hashes to the database: {e}")
+            return False
+    else:
+        return False
 
 
 if __name__ == '__main__':
