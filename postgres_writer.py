@@ -4,7 +4,6 @@ from datetime import datetime
 import psycopg2
 from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime
 
-
 db_config = {
     'PASS': environ.get('PASS', ''),
     'DOMAIN': environ.get('DOMAIN', ''),
@@ -13,11 +12,13 @@ db_config = {
 }
 metadata = MetaData()
 
-hashes = Table('hashes', metadata,
-               Column('id', Integer, primary_key=True),
-               Column('hash', String(640000), unique=True),
-               Column('created_at', DateTime, default=datetime.now)
-               )
+# create table for maximum 1000 hash size
+hashes = Table(
+    'hashes', metadata,
+    Column('id', Integer, primary_key=True),
+    Column('hash', String(64)),
+    Column('created_at', DateTime, default=datetime.now)
+)
 
 
 def generate_random_hash(numb: int = 1) -> str:
@@ -29,7 +30,8 @@ def generate_random_hash(numb: int = 1) -> str:
     else:
         return ''.join(
             [hashlib.sha256(''.join(random.choices(string.ascii_letters + string.digits, k=64)).encode()).hexdigest()
-             for _ in range(numb)])
+             for _ in range(numb)]
+        )
 
 
 def test_postgres_connection():
@@ -61,5 +63,9 @@ def postgres_write_hash(size: int = 100) -> bool:
         return True
     return False
 
+
 if __name__ == '__main__':
-    postgres_write_hash(db_config['RECORDS'])
+    if postgres_write_hash(db_config['RECORDS']):
+        logging.info("Hashes successfully written to the database.")
+    else:
+        logging.error("Failed to write hashes to the database.")
