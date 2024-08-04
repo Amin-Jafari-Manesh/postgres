@@ -15,7 +15,7 @@ metadata = MetaData()
 
 hashes = Table('hashes', metadata,
                Column('id', Integer, primary_key=True),
-               Column('hash', String(64), unique=True),
+               Column('hash', String(640000), unique=True),
                Column('created_at', DateTime, default=datetime.now)
                )
 
