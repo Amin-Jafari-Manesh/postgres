@@ -16,7 +16,7 @@ metadata = MetaData()
 hashes = Table(
     'hashes', metadata,
     Column('id', Integer, primary_key=True),
-    Column('hash', String(64)),
+    Column('hash', String(64 * db_config['HASH_SIZE'])),
     Column('created_at', DateTime, default=datetime.now)
 )
 
