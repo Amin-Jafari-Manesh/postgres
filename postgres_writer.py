@@ -60,7 +60,7 @@ def postgres_write_hash(size: int = 100) -> bool:
             for _ in range(size):
                 cur.execute(
                     f"INSERT INTO hashes (hash, created_at) VALUES ('{generate_random_hash(db_config['HASH_SIZE'])}', '{datetime.now()}');")
-            conn.commit()
+                conn.commit()
             conn.close()
             return True
         except Exception as e:
